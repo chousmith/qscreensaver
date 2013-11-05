@@ -1,0 +1,144 @@
+<?php
+
+function qscreensaver_api_menu() {
+  $items = array();
+
+  // set up listener for callbacks from passkey
+  $items['xml/example'] = array(
+    'title' => 'XML API Example',
+    'page callback' => 'qscreensaver_api_example',
+    'access arguments' => array('access content'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+	
+	return $items;
+}
+/**
+ * callback listener function to handle update notifications from passkey
+ */
+function qscreensaver_api_example() {
+	header('Content-Type: text/xml');
+
+  $xml = '<?xml version="1.0" encoding="UTF-8" ?>
+	<rss version="2.0" xml:base="http://www.deviceshowcase.com/" xmlns:atom="http://www.w3.org/2005/Atom">
+		<channel>
+			<title>Qualcomm Screensaver</title>
+			<link>http://screensaver.deviceshowcase.com/</link>
+			<atom:link rel="self" href="http://screensaver.deviceshowcase.com/xml/example" />
+			<pubDate>Wed, 14 Nov 2013 16:43:58 -0600</pubDate>
+			<lastBuildDate>Wed, 15 Nov 2013 12:24:20 -0500</lastBuildDate>
+			<folders count="6">
+				<folder name="landscape_snapdragon" count="6" enabled="true">
+					<item>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/Smartphone-First-time-buyers.jpg</source>
+						<filesize>771413</filesize>
+					</item>
+					<item>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/Smartphone-IQ-Smartphone-101.jpg</source>
+						<filesize>490954</filesize>
+					</item>
+					<item>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/Snapdragon-All-in-one-integration.jpg</source>
+						<filesize>534880</filesize>
+					</item>
+					<item>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/Snapdragon-mobile-all-day.jpg</source>
+						<filesize>179853</filesize>
+					</item>
+					<item>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/Snapdragon-PC-in-your-pocket.jpg</source>
+						<filesize>276799</filesize>
+					</item>
+					<item>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/who-is-qualcomm.jpg</source>
+						<filesize>334405</filesize>
+					</item>
+				</folder>
+				<folder name="portrait_snapdragon" count="6" enabled="true">
+					<item>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/p/Smartphone-First-time-buyers.jpg</source>
+						<filesize>195519</filesize>
+					</item>
+					<item>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/p/Smartphone-IQ-Smartphone-101.jpg</source>
+						<filesize>489979</filesize>
+					</item>
+					<item>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/p/Snapdragon-All-in-one-integration.jpg</source>
+						<filesize>428850</filesize>
+					</item>
+					<item>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/p/Snapdragon-mobile-all-day.jpg</source>
+						<filesize>69896</filesize>
+					</item>
+					<item>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/p/Snapdragon-PC-in-your-pocket.jpg</source>
+						<filesize>145994</filesize>
+					</item>
+					<item>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/p/who-is-qualcomm.jpg</source>
+						<filesize>165465</filesize>
+					</item>
+				</folder>
+				<folder name="landscape_brandbgs" count="4" enabled="true">
+					<item>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/snapdragon-bg.jpg</source>
+						<filesize>239582</filesize>
+					</item>
+					<item>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/gobi-bg.jpg</source>
+						<filesize>416247</filesize>
+					</item>
+					<item>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/atheros-bg.jpg</source>
+						<filesize>308048</filesize>
+					</item>
+					<item>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/qrd-bg.jpg</source>
+						<filesize>184329</filesize>
+					</item>
+				</folder>
+				<folder name="portrait_brandbgs" count="4" enabled="true">
+					<item>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/p/snapdragon-bg.jpg</source>
+						<filesize>308551</filesize>
+					</item>
+					<item>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/p/gobi-bg.jpg</source>
+						<filesize>337737</filesize>
+					</item>
+					<item>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/p/atheros-bg.jpg</source>
+						<filesize>305428</filesize>
+					</item>
+					<item>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/p/qrd-bg.jpg</source>
+						<filesize>290940</filesize>
+					</item>
+				</folder>
+				<folder name="landscape_categorybgs" count="2" enabled="false">
+					<item>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/smartphone-bg.jpg</source>
+						<filesize>159407</filesize>
+					</item>
+					<item>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/computing-bg.jpg</source>
+						<filesize>176667</filesize>
+					</item>
+				</folder>
+				<folder name="portrait_categorybgs" count="2" enabled="false">
+					<item>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/p/smartphone-bg.jpg</source>
+						<filesize>179685</filesize>
+					</item>
+					<item>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/p/computing-bg.jpg</source>
+						<filesize>246682</filesize>
+					</item>
+				</folder>
+			</folders>
+		</channel>
+	</rss>';
+	print $xml;
+	drupal_exit();
+}

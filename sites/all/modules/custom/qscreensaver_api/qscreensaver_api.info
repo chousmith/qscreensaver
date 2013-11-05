@@ -1,0 +1,3 @@
+name = qScreensaver API
+description = "Provides XML API + customizations for the Qualcomm Screensaver website"
+core = 7.x

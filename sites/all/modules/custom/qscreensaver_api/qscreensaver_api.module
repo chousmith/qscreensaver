@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * hook_menu
+ */
 function qscreensaver_api_menu() {
   $items = array();
 
@@ -11,7 +13,73 @@ function qscreensaver_api_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
 	
+  $items['xml'] = array(
+    'title' => 'XML API',
+    'page callback' => 'qscreensaver_api_viewbased',
+    'access arguments' => array('access content'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+	
 	return $items;
+}
+/**
+ * callback listener function to handle update notifications from passkey
+ */
+function qscreensaver_api_viewbased() {
+	header('Content-Type: text/xml');
+
+  $xml = '<?xml version="1.0" encoding="UTF-8" ?>
+	<rss version="2.0" xml:base="http://www.deviceshowcase.com/" xmlns:atom="http://www.w3.org/2005/Atom">
+		<channel>
+			<title>Qualcomm Screensaver</title>
+			<link>http://screensaver.deviceshowcase.com/</link>
+			<atom:link rel="self" href="http://screensaver.deviceshowcase.com/xml" />
+			<pubDate>Wed, 14 Nov 2013 16:43:58 -0600</pubDate>
+			<lastBuildDate>Wed, 15 Nov 2013 12:24:20 -0500</lastBuildDate>';
+	// load our slides & group em		
+	$slides = views_get_view_result( 'slides_xml' );
+	$folders = array();
+	$currentmode = '';
+	$currentfolder = '';
+	foreach ( $slides as $s ) {
+		if ( ( $s->node_type != $currentmode ) || ( $s->field_field_slide_category[0]['raw']['taxonomy_term']->name != $currentfolder ) ) {
+			// new group
+			$currentmode = $s->node_type;
+			$currentfolder = $s->field_field_slide_category[0]['raw']['taxonomy_term']->name;
+		}
+		$fs = ( $currentmode == 'portrait_slide' ? 'portrait' : 'landscape' ) .'_';
+		$fk = $fs . $currentfolder;
+		
+		$image = image_style_path( ( $currentmode == 'portrait_slide' ? 'p' : 'l' ), $s->file_managed_file_usage_uri );
+		$image_info = image_get_info( $image );
+		$folders[$fk][] = array(
+			'source' => file_create_url( $image ),
+			'filesize' => $image_info['file_size'],
+		);
+	}
+	//$xml .= '<pre>'. print_r($folders,true) .'</pre>';
+	$xml .= '<folders count="'. count($folders) .'">';
+	foreach ( $folders as $k => $v ) {
+		$xml .= '
+				<folder name="'. $k .'" count="'. count($v) .'" enabled="true">';
+				
+		foreach ( $v as $i ) {
+			$xml .= '
+					<item>
+						<source>'. $i['source'] .'</source>
+						<filesize>'. $i['filesize'] .'</filesize>
+					</item>';
+		}
+		
+		$xml .= '
+				</folder>';
+	}
+		$xml .= '
+			</folders>
+		</channel>
+	</rss>';
+	print $xml;
+	drupal_exit();
 }
 /**
  * callback listener function to handle update notifications from passkey

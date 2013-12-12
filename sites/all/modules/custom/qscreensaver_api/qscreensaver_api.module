@@ -31,27 +31,27 @@ function qscreensaver_api_example() {
 				<folder name="landscape_snapdragon" count="6" enabled="true">
 					<item>
 						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/Smartphone-First-time-buyers.jpg</source>
-						<filesize>771413</filesize>
+						<filesize>152798</filesize>
 					</item>
 					<item>
 						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/Smartphone-IQ-Smartphone-101.jpg</source>
-						<filesize>490954</filesize>
+						<filesize>339946</filesize>
 					</item>
 					<item>
 						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/Snapdragon-All-in-one-integration.jpg</source>
-						<filesize>534880</filesize>
+						<filesize>213465</filesize>
 					</item>
 					<item>
 						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/Snapdragon-mobile-all-day.jpg</source>
-						<filesize>179853</filesize>
+						<filesize>90909</filesize>
 					</item>
 					<item>
 						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/Snapdragon-PC-in-your-pocket.jpg</source>
-						<filesize>276799</filesize>
+						<filesize>123204</filesize>
 					</item>
 					<item>
 						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/who-is-qualcomm.jpg</source>
-						<filesize>334405</filesize>
+						<filesize>124647</filesize>
 					</item>
 				</folder>
 				<folder name="portrait_snapdragon" count="6" enabled="true">
@@ -83,19 +83,19 @@ function qscreensaver_api_example() {
 				<folder name="landscape_brandbgs" count="4" enabled="true">
 					<item>
 						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/snapdragon-bg.jpg</source>
-						<filesize>239582</filesize>
+						<filesize>157546</filesize>
 					</item>
 					<item>
 						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/gobi-bg.jpg</source>
-						<filesize>416247</filesize>
+						<filesize>237492</filesize>
 					</item>
 					<item>
 						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/atheros-bg.jpg</source>
-						<filesize>308048</filesize>
+						<filesize>215764</filesize>
 					</item>
 					<item>
 						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/qrd-bg.jpg</source>
-						<filesize>184329</filesize>
+						<filesize>134482</filesize>
 					</item>
 				</folder>
 				<folder name="portrait_brandbgs" count="4" enabled="true">
@@ -119,11 +119,11 @@ function qscreensaver_api_example() {
 				<folder name="landscape_categorybgs" count="2" enabled="false">
 					<item>
 						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/smartphone-bg.jpg</source>
-						<filesize>159407</filesize>
+						<filesize>163116</filesize>
 					</item>
 					<item>
 						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/computing-bg.jpg</source>
-						<filesize>176667</filesize>
+						<filesize>173810</filesize>
 					</item>
 				</folder>
 				<folder name="portrait_categorybgs" count="2" enabled="false">

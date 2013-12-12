@@ -30,27 +30,27 @@ function qscreensaver_api_example() {
 			<folders count="6">
 				<folder name="landscape_snapdragon" count="6" enabled="true">
 					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/Smartphone-First-time-buyers.jpg</source>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/1-Smartphone-First.jpg</source>
 						<filesize>152798</filesize>
 					</item>
 					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/Smartphone-IQ-Smartphone-101.jpg</source>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/2-Smartphone-IQ.jpg</source>
 						<filesize>339946</filesize>
 					</item>
 					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/Snapdragon-All-in-one-integration.jpg</source>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/3-Snapdragon-All.jpg</source>
 						<filesize>213465</filesize>
 					</item>
 					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/Snapdragon-mobile-all-day.jpg</source>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/4-Snapdragon-mobile.jpg</source>
 						<filesize>90909</filesize>
 					</item>
 					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/Snapdragon-PC-in-your-pocket.jpg</source>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/5-Snapdragon-PC.jpg</source>
 						<filesize>123204</filesize>
 					</item>
 					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/who-is-qualcomm.jpg</source>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/6-is-qualcomm.jpg</source>
 						<filesize>124647</filesize>
 					</item>
 				</folder>
@@ -82,19 +82,19 @@ function qscreensaver_api_example() {
 				</folder>
 				<folder name="landscape_brandbgs" count="4" enabled="true">
 					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/snapdragon-bg.jpg</source>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/7-snapdragon-bg.jpg</source>
 						<filesize>157546</filesize>
 					</item>
 					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/gobi-bg.jpg</source>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/8-gobi-bg.jpg</source>
 						<filesize>237492</filesize>
 					</item>
 					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/atheros-bg.jpg</source>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/9-atheros-bg.jpg</source>
 						<filesize>215764</filesize>
 					</item>
 					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/qrd-bg.jpg</source>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/10-qrd-bg.jpg</source>
 						<filesize>134482</filesize>
 					</item>
 				</folder>
@@ -118,11 +118,11 @@ function qscreensaver_api_example() {
 				</folder>
 				<folder name="landscape_categorybgs" count="2" enabled="false">
 					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/smartphone-bg.jpg</source>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/11-smartphone-bg.jpg</source>
 						<filesize>163116</filesize>
 					</item>
 					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/computing-bg.jpg</source>
+						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/12-computing-bg.jpg</source>
 						<filesize>173810</filesize>
 					</item>
 				</folder>

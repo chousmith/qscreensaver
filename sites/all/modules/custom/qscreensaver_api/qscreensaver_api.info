@@ -1,3 +1,3 @@
 name = qScreensaver API
-description = "Provides XML API + customizations for the Qualcomm Screensaver website"
+description = "Provides XML API to power Qualcomm Screensaver apps via the website"
 core = 7.x

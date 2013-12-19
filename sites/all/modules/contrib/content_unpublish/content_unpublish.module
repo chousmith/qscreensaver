@@ -1,0 +1,348 @@
+<?php
+
+/**
+ * @file
+ * Unpublish content instead of deleting it.
+ */
+
+/**
+ * Implements hook_help().
+ */
+function content_unpublish_help($path, $arg) {
+  switch ($path) {
+    case 'admin/settings/content_unpublish':
+      return t('Show an Unpublish button to <a href="@user-permissions">privileged</a> users.', array('@user-permissions' => url('admin/user/permissions')));
+
+    case 'admin/help#content_unpublish':
+      $output = '';
+      $output .= '<p>'. t("Show an Unpublish button to privileged users. This can be used when you don't want to give delete rights to users, but want to let them have control over the publishing of content.") .'</p>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_permission().
+ */
+function content_unpublish_permission() {
+  $perms = array();
+
+  // Comment permissions.
+  $perms['unpublish own comment'] = array(
+    'title' => t('Unpublish own comment'),
+  );
+
+  // Generate standard node permissions for all applicable node types.
+  foreach (node_permissions_get_configured_types() as $type) {
+    $perms += content_unpublish_list_permissions($type);
+  }
+
+  return $perms;
+}
+
+/**
+ * Helper function to generate standard node permission list for a given type.
+ *
+ * @param $type
+ *   The machine-readable name of the node type.
+ * @return array
+ *   An array of permission names and descriptions.
+ */
+function content_unpublish_list_permissions($type) {
+  $info = node_type_get_type($type);
+  $type = check_plain($info->type);
+
+  // Build standard list of node permissions for this type.
+  $perms = array(
+    // Node permissions.
+    "unpublish own $type content" => array(
+      'title' => t('%type_name: Unpublish own content', array('%type_name' => $info->name)),
+    ),
+    "unpublish any $type content" => array(
+      'title' => t('%type_name: Unpublish any content', array('%type_name' => $info->name)),
+    ),
+  );
+
+  return $perms;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function content_unpublish_menu() {
+  $items['node/%node/unpublish'] = array(
+    'title' => 'Unpublish',
+    'page callback' => 'content_unpublish_switcher',
+    'page arguments' => array('node', 1, FALSE),
+    'access callback' => 'content_unpublish_node_access',
+    'access arguments' => array('unpublish', 'unpublish_url', 1),
+  );
+  $items['node/%node/publish'] = array(
+    'title' => 'Publish',
+    'page callback' => 'content_unpublish_switcher',
+    'page arguments' => array('node', 1, TRUE),
+    'access callback' => 'content_unpublish_node_access',
+    'access arguments' => array('unpublish', 'publish_url', 1),
+  );
+
+  $items['comment/%comment/unpublish'] = array(
+    'title' => 'Unpublish',
+    'page callback' => 'content_unpublish_switcher',
+    'page arguments' => array('comment', 1, FALSE),
+    'access callback' => 'content_unpublish_comment_access',
+    'access arguments' => array('unpublish', 'unpublish_url', 1),
+  );
+  $items['comment/%comment/publish'] = array(
+    'title' => 'Publish',
+    'page callback' => 'content_unpublish_switcher',
+    'page arguments' => array('comment', 1, TRUE),
+    'access callback' => 'content_unpublish_comment_access',
+    'access arguments' => array('unpublish', 'publish_url', 1),
+  );
+  return $items;
+}
+
+/**
+ * Menu callback; Check user access to unpublish node.
+ */
+function content_unpublish_node_access($op, $name, $node = NULL, $account = NULL) {
+  if (!in_array($op, array('view', 'publish', 'unpublish')) || !isset($node) || !isset($node->status)) {
+    return;
+  }
+
+  if (in_array($op, array('publish', 'unpublish')) && (!isset($_GET['token']) || !drupal_valid_token($_GET['token'], $node->nid))) {
+    return FALSE;
+  }
+
+  if ($node->status == (strpos($name, 'publish') === 0)) {
+    // Node is already in the state required.
+    return FALSE;
+  }
+
+  if (empty($account)) {
+    global $user;
+    $account = clone $user;
+  }
+  return user_access('unpublish any '. $node->type .' content', $account) || ($node->uid == $account->uid && user_access('unpublish own '. $node->type .' content', $account));
+}
+
+/**
+ * Menu callback; Check user access to unpublish comment.
+ */
+function content_unpublish_comment_access($op, $name, $comment = NULL, $account = NULL) {
+  if (!in_array($op, array('view', 'publish', 'unpublish')) || !isset($comment) || !isset($comment->status)) {
+    return;
+  }
+
+  if (in_array($op, array('publish', 'unpublish')) && (!isset($_GET['token']) || !drupal_valid_token($_GET['token'], $comment->cid))) {
+    return FALSE;
+  }
+
+  if ($comment->status == (strpos($name, 'publish') === 0)) {
+    // Comment is already in the state required.
+    return FALSE;
+  }
+
+  if (empty($account)) {
+    global $user;
+    $account = clone $user;
+  }
+
+  // Get the node type (no need to node load just to get the type).
+  $type = str_replace('comment_node_', '', $comment->node_type);
+  return $comment->uid == $account->uid && user_access('unpublish own comment', $account);
+}
+
+/**
+ * Implementation of hook_views_api().
+ */
+function content_unpublish_views_api() {
+  return array(
+    'api' => 2,
+    'path' => drupal_get_path('module', 'content_unpublish') . '/includes',
+  );
+}
+
+
+/**
+ * Implements hook_entity_property_info().
+ */
+function content_unpublish_entity_property_info() {
+  $info = array();
+  // Add meta-data about the basic node properties.
+  $node_properties = &$info['node']['properties'];
+
+  $node_properties['edit_link'] = array(
+    'label' => t("Edit link"),
+    'description' => t("The edit link of the node with a text."),
+    'getter callback' => 'content_unpublish_node_get_properties',
+    'access callback' => 'content_unpublish_node_access',
+  );
+  $node_properties['unpublish_url'] = array(
+    'label' => t("Unpublish URL"),
+    'description' => t("The unpublish URL of the node."),
+    'getter callback' => 'content_unpublish_node_get_properties',
+    'access callback' => 'content_unpublish_node_access',
+    'type' => 'uri',
+  );
+  $node_properties['unpublish_link'] = array(
+    'label' => t("Unpublish link"),
+    'description' => t("The unpublish link with a text."),
+    'getter callback' => 'content_unpublish_node_get_properties',
+    'access callback' => 'content_unpublish_node_access',
+  );
+  $node_properties['publish_url'] = array(
+    'label' => t("Publish URL"),
+    'description' => t("The publish URL of the node."),
+    'getter callback' => 'content_unpublish_node_get_properties',
+    'access callback' => 'content_unpublish_node_access',
+    'type' => 'uri',
+  );
+  $node_properties['publish_link'] = array(
+    'label' => t("Publish link"),
+    'description' => t("The publish link of the node with a text."),
+    'getter callback' => 'content_unpublish_node_get_properties',
+    'access callback' => 'content_unpublish_node_access',
+  );
+
+   // Add meta-data about the basic comment properties.
+  $comment_properties = &$info['comment']['properties'];
+
+  $comment_properties['unpublish_url'] = array(
+    'label' => t("Unpublish URL"),
+    'description' => t("The unpublish URL of the node."),
+    'getter callback' => 'content_unpublish_comment_get_properties',
+    'access callback' => 'content_unpublish_comment_access',
+    'type' => 'uri',
+  );
+  $comment_properties['unpublish_link'] = array(
+    'label' => t("Unpublish link"),
+    'description' => t("The unpublish link with a text."),
+    'getter callback' => 'content_unpublish_comment_get_properties',
+    'access callback' => 'content_unpublish_comment_access',
+  );
+  $comment_properties['publish_url'] = array(
+    'label' => t("Publish URL"),
+    'description' => t("The publish URL of the node."),
+    'getter callback' => 'content_unpublish_comment_get_properties',
+    'access callback' => 'content_unpublish_comment_access',
+    'type' => 'uri',
+  );
+  $comment_properties['publish_link'] = array(
+    'label' => t("Publish link"),
+    'description' => t("The publish link with a text."),
+    'getter callback' => 'content_unpublish_comment_get_properties',
+    'access callback' => 'content_unpublish_comment_access',
+  );
+
+  return $info;
+}
+
+/**
+ * Callback for getting node properties.
+ */
+function content_unpublish_node_get_properties($node, array $options, $name, $entity_type) {
+  // Add token to the link.
+  $options['query']['token'] = drupal_get_token($node->nid);
+
+  switch ($name) {
+    case 'edit_link':
+      return l(t('Edit'), 'node/' . $node->nid . '/edit', $options);
+
+    case 'unpublish_url':
+      return url('node/' . $node->nid . '/unpublish', $options);
+
+    case 'unpublish_link':
+      return l(t('Delete'), 'node/' . $node->nid . '/unpublish', $options);
+
+    case 'publish_url':
+      return url('node/' . $node->nid . '/publish', $options);
+
+    case 'publish_link':
+      return l(t('Publish'), 'node/' . $node->nid . '/publish', $options);
+  }
+}
+
+/**
+ * Callback for getting comment properties.
+ */
+function content_unpublish_comment_get_properties($comment, array $options, $name, $entity_type) {
+  // Add token to the link.
+  $options['query']['token'] = drupal_get_token($comment->cid);
+
+  switch ($name) {
+    case 'unpublish_url':
+      return url('comment/' . $comment->cid . '/unpublish', $options);
+
+    case 'unpublish_link':
+      return l(t('Delete'), 'comment/' . $comment->cid . '/unpublish', $options);
+
+    case 'publish_url':
+      return url('comment/' .$comment->cid . '/publish', $options);
+
+    case 'publish_link':
+      return l(t('Publish'), 'comment/' . $comment->cid . '/publish', $options);
+  }
+}
+
+/**
+ * Unpublish entity.
+ *
+ * @param $entity_type
+ *   The entity type.
+ * @param $entity
+ *   The entity object (node or comment).
+ * @param $op
+ *   TRUE to make entity published.
+ *
+ */
+function content_unpublish_switcher($entity_type, $entity, $op) {
+  $wrapper = entity_metadata_wrapper($entity_type, $entity);
+  $wrapper->status->set((int)$op);
+  $wrapper->save();
+
+  drupal_goto();
+}
+
+function __content_unpublish_form_alter(&$form, $form_state, $form_id) {
+  if (strpos($form_id, '_node_form') && !empty($form['nid']['#value']) && content_unpublish_access($form['#node']) && $form['#node']->status) {
+   // Add unpublish handler.
+   $form['buttons']['unpublish'] = array(
+     '#type' => 'submit',
+     '#value' => variable_get('content_unpublish_button_name', t('Unpublish')),
+     '#weight' => 13,
+     '#submit' => array('content_unpublish_delete_submit')
+    );
+  }
+}
+
+/**
+ * Button submit function: handle the 'Unpublish' button on the node form.
+ */
+function content_unpublish_delete_submit($form, &$form_state) {
+  $destination = '';
+  if (isset($_REQUEST['destination'])) {
+    $destination = drupal_get_destination();
+    unset($_REQUEST['destination']);
+  }
+  $node = $form['#node'];
+  $form_state['redirect'] = array('node/'. $node->nid .'/unpublish', $destination);
+}
+
+/**
+ * Menu callback; Ask for confirmation of node unpublish.
+ */
+function content_unpublish_delete_confirm(&$form_state, $node) {
+  $form['nid'] = array(
+    '#type' => 'value',
+    '#value' => $node->nid,
+  );
+  $operation = variable_get('content_unpublish_button_name', t('Unpublish'));
+
+  return confirm_form($form,
+    t('Are you sure you want to @operation %title?', array('@operation' => drupal_strtolower($operation), '%title' => $node->title)),
+    isset($_GET['destination']) ? $_GET['destination'] : 'node/'. $node->nid,
+    t('This action cannot be undone.'),
+    check_plain($operation),
+    t('Cancel')
+  );
+}

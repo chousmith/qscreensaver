@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the qScreensaver Views feature.
+ */
+
+include_once 'qscreensaver_views.features.inc';

@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the qScreensaver Definitions feature.
+ */
+
+include_once 'qscreensaver_definitions.features.inc';

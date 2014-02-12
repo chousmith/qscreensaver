@@ -43,20 +43,49 @@ function qscreensaver_api_xml() {
 	// load our slides & group em		
 	$slides = views_get_view_result( 'slides_xml' );
 	$folders = array();
+	
 	$currentmode = '';
 	$currentfolder = '';
+	$enabled = true;
+	$flags = array();
+	$flag = false;
+	if ( function_exists('flag_get_flag') ) {
+		$flag = flag_get_flag('defaultenabled');
+	}
+	
 	foreach ( $slides as $s ) {
 		if ( ( $s->node_type != $currentmode ) || ( $s->field_field_slide_category[0]['raw']['taxonomy_term']->name != $currentfolder ) ) {
 			// new group
 			$currentmode = $s->node_type;
 			$currentfolder = $s->field_field_slide_category[0]['raw']['taxonomy_term']->name;
+			
+			$fs = ( $currentmode == 'portrait_slide' ? 'portrait' : 'landscape' ) .'_';
+			$fk = $fs . $currentfolder;
+			
+			$tid = $s->field_data_field_slide_category_field_slide_category_tid;
+			
+			if ( !isset( $flags[$tid] ) ) {
+				$enabled = true;
+				
+				// check for actual flag
+				if ( $flag !== false ) {
+					$enabled = $flag->is_flagged($tid);
+				}
+				
+				$flags[$tid] = $enabled;
+			} else {
+				$enabled = $flags[$tid];
+			}
+			
+			$folders[$fk] = array(
+				'enabled' => $enabled ? 'true' : 'false',
+				'items' => array()
+			);
 		}
-		$fs = ( $currentmode == 'portrait_slide' ? 'portrait' : 'landscape' ) .'_';
-		$fk = $fs . $currentfolder;
 		
 		$image = image_style_path( ( $currentmode == 'portrait_slide' ? 'p' : 'l' ), $s->file_managed_file_usage_uri );
 		$image_info = image_get_info( $image );
-		$folders[$fk][] = array(
+		$folders[$fk]['items'][] = array(
 			'source' => file_create_url( $image ),
 			'filesize' => $image_info['file_size'],
 		);
@@ -64,9 +93,9 @@ function qscreensaver_api_xml() {
 	$xml .= '<folders count="'. count($folders) .'">';
 	foreach ( $folders as $k => $v ) {
 		$xml .= '
-				<folder name="'. $k .'" count="'. count($v) .'" enabled="true">';
+				<folder name="'. $k .'" count="'. count($v['items']) .'" enabled="'. $v['enabled'] .'">';
 				
-		foreach ( $v as $i ) {
+		foreach ( $v['items'] as $i ) {
 			$xml .= '
 					<item>
 						<source>'. $i['source'] .'</source>

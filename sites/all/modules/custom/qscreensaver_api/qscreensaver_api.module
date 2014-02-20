@@ -30,6 +30,11 @@ function qscreensaver_api_menu() {
  * by Portrait/Landscape (content type) + Folder Name (Category taxonomy)
  */
 function qscreensaver_api_xml() {
+	if ( function_exists('watchdog') ) {
+	if ( function_exists( 'apache_response_headers' ) ) {
+		$hdrs = apache_response_headers();
+		watchdog('xml api', 'headers : <pre>'. print_r($hdrs,true) .'</pre>');
+	}
 	header('Content-Type: text/xml');
 
   $xml = '<?xml version="1.0" encoding="UTF-8" ?>

@@ -84,6 +84,15 @@ function qscreensaver_api_xml() {
 		}
 		
 		$image = image_style_path( 's', $s->file_managed_file_usage_uri );
+		/* http://drupal.stackexchange.com/questions/11552/image-style-url-doesnt-create-images */
+		$image_uri = $s->file_managed_file_usage_uri; // or any public://my_image
+		$style = 's';
+		$derivative_uri = image_style_path($style, $image_uri);
+		$success = file_exists($derivative_uri) || image_style_create_derivative($style, $image_uri, $derivative_uri);
+		
+		$new_image_url = file_create_url($derivative_uri);
+		$image = $new_image_url;
+		/* and then */
 		$image_info = image_get_info( $image );
 		$folders[$fk]['items'][] = array(
 			'source' => file_create_url( $image ),

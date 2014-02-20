@@ -31,10 +31,13 @@ function qscreensaver_api_menu() {
  */
 function qscreensaver_api_xml() {
 	if ( function_exists('watchdog') ) {
+		$dbg = '';
 		if ( function_exists( 'apache_response_headers' ) ) {
 			$hdrs = apache_response_headers();
-			watchdog('xml api', 'headers : <pre>'. print_r($hdrs,true) .'</pre>');
+			$dbg .= 'headers : <pre>'. print_r($hdrs,true) .'</pre><br /><br />';
 		}
+		$dbg .= 'server : <pre>'. print_r($_SERVER,true) .'</pre><br /><br />';
+		watchdog('xml api', $dbg );
 	}
 	header('Content-Type: text/xml');
 

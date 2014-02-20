@@ -57,7 +57,7 @@ function qscreensaver_api_xml() {
 		if ( ( $s->node_type != $currentmode ) || ( $s->field_field_slide_category[0]['raw']['taxonomy_term']->name != $currentfolder ) ) {
 			// new group
 			$currentmode = $s->node_type;
-			$currentfolder = $s->field_field_slide_category[0]['raw']['taxonomy_term']->name;
+			$currentfolder = strtolower( str_replace( ' ', '', str_replace( '_', '', $s->field_field_slide_category[0]['raw']['taxonomy_term']->name ) ) );
 			
 			$fs = ( $currentmode == 'portrait_slide' ? 'portrait' : 'landscape' ) .'_';
 			$fk = $fs . $currentfolder;
@@ -92,7 +92,6 @@ function qscreensaver_api_xml() {
 	}
 	$xml .= '<folders count="'. count($folders) .'">';
 	foreach ( $folders as $k => $v ) {
-		$fn = str_replace(' ', '', str_replace('_', '', $k ) );
 		$xml .= '
 				<folder name="'. $fn .'" count="'. count($v['items']) .'" enabled="'. $v['enabled'] .'">';
 				

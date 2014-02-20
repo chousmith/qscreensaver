@@ -93,7 +93,7 @@ function qscreensaver_api_xml() {
 	$xml .= '<folders count="'. count($folders) .'">';
 	foreach ( $folders as $k => $v ) {
 		$xml .= '
-				<folder name="'. $fn .'" count="'. count($v['items']) .'" enabled="'. $v['enabled'] .'">';
+				<folder name="'. $k .'" count="'. count($v['items']) .'" enabled="'. $v['enabled'] .'">';
 				
 		foreach ( $v['items'] as $i ) {
 			$xml .= '

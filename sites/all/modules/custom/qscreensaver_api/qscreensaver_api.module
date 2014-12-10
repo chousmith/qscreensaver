@@ -1,7 +1,6 @@
 <?php
 /*
- * TODO :
- * move the 2 CONTENT TYPES + 4 IMAGE STYLES + 1 VIEW into this module programmatically?
+ * #todo : move the 2 CONTENT TYPES + 4 IMAGE STYLES + 1 VIEW into this module?
  */
 /**
  * hook_menu
@@ -15,14 +14,6 @@ function qscreensaver_api_menu() {
 			'type' => MENU_NORMAL_ITEM,
 		)
 	);
-	/*
-  $items['xml/example'] = array(
-    'title' => 'XML API Example',
-    'page callback' => 'qscreensaver_api_example',
-    'access arguments' => array('access content'),
-    'type' => MENU_NORMAL_ITEM,
-  );
-	*/
 	return $items;
 }
 /**
@@ -30,6 +21,11 @@ function qscreensaver_api_menu() {
  * by Portrait/Landscape (content type) + Folder Name (Category taxonomy)
  */
 function qscreensaver_api_xml() {
+  $folder = arg(1);
+  if ( $folder === 'all' ) {
+    $folder = null;
+  }
+  //watchdog( 'xml chk', 'arg0 '. arg(0) .' / arg1 '. arg(1) .' / arg2 '. arg(2) );
 	/*
 	if ( function_exists('watchdog') ) {
 		$dbg = '';
@@ -52,11 +48,11 @@ function qscreensaver_api_xml() {
 			<pubDate>Wed, 14 Nov 2013 16:43:58 -0600</pubDate>
 			<lastBuildDate>Wed, 15 Nov 2013 12:24:20 -0500</lastBuildDate>';
 	// load our slides & group em		
-	$slides = views_get_view_result( 'slides_xml' );
+	$slides = views_get_view_result( 'slides_xml', null, $folder );
 	$folders = array();
 	
-	$currentmode = '';
-	$currentfolder = '';
+	$mode = '';
+	$group = '';
 	$enabled = true;
 	$flags = array();
 	$flag = false;
@@ -65,13 +61,18 @@ function qscreensaver_api_xml() {
 	}
 	
 	foreach ( $slides as $s ) {
-		if ( ( $s->node_type != $currentmode ) || ( $s->field_field_slide_category[0]['raw']['taxonomy_term']->name != $currentfolder ) ) {
+    $smode = $s->node_type;
+    $sgroup = $s->field_field_slide_category[0]['raw']['taxonomy_term']->name;
+		if ( ( $smode != $mode ) || ( $sgroup != $group ) ) {
 			// new group
-			$currentmode = $s->node_type;
-			$currentfolder = strtolower( str_replace( ' ', '', str_replace( '_', '', $s->field_field_slide_category[0]['raw']['taxonomy_term']->name ) ) );
+			$mode = $s->node_type;
+			$group = $s->field_field_slide_category[0]['raw']['taxonomy_term']->name;
+      // sanitize/standardize group name
+      $group = str_replace( ' ', '', str_replace( '_', '', $group ) );
+      $group = strtolower( $group );
 			
-			$fs = ( $currentmode == 'portrait_slide' ? 'portrait' : 'landscape' ) .'_';
-			$fk = $fs . $currentfolder;
+			$fs = ( $mode == 'portrait_slide' ? 'portrait' : 'landscape' ) .'_';
+			$fk = $fs . $group;
 			
 			$tid = $s->field_data_field_slide_category_field_slide_category_tid;
 			
@@ -95,27 +96,36 @@ function qscreensaver_api_xml() {
 		}
 		
 		$image = image_style_path( 's', $s->file_managed_file_usage_uri );
-		/* http://drupal.stackexchange.com/questions/11552/image-style-url-doesnt-create-images */
+		// http://drupal.stackexchange.com/a/76827
 		$image_uri = $s->file_managed_file_usage_uri; // or any public://my_image
 		$style = 's';
-		$derivative_uri = image_style_path($style, $image_uri);
-		$success = file_exists($derivative_uri) || image_style_create_derivative($style, $image_uri, $derivative_uri);
+		$src = image_style_path($style, $image_uri);
+		$ok = file_exists($src);
+    if ( !$ok ) {
+      $ok = image_style_create_derivative($style, $image_uri, $src);
+    }
 		
-		$new_image_url = file_create_url($derivative_uri);
+		$new_image_url = file_create_url($src);
 		$image = $new_image_url;
 		/* and then */
-		$image_info = image_get_info( $derivative_uri );
-		//watchdog('img chk', 'image '. $image .' : d_uri '. $derivative_uri .' : info : <pre>'. print_r($image_info,true) .'</pre>');
-		
+		$image_info = image_get_info( $src );
+    /*
+    $logmsg = 'image '. $image .' : src '. $src;
+    $logmsg .= ' info : <pre>'. print_r($image_info,true) .'</pre>';
+		//watchdog('img chk', $logmsg );
+		*/
 		$folders[$fk]['items'][] = array(
 			'source' => file_create_url( $image ),
 			'filesize' => $image_info['file_size'],
 		);
 	}
+  
 	$xml .= '<folders count="'. count($folders) .'">';
 	foreach ( $folders as $k => $v ) {
+    $c = count( $v['items'] );
+    $e = $v['enabled'];
 		$xml .= '
-				<folder name="'. $k .'" count="'. count($v['items']) .'" enabled="'. $v['enabled'] .'">';
+				<folder name="'. $k .'" count="'. $c .'" enabled="'. $e .'">';
 				
 		foreach ( $v['items'] as $i ) {
 			$xml .= '
@@ -129,135 +139,6 @@ function qscreensaver_api_xml() {
 				</folder>';
 	}
 	$xml .= '
-			</folders>
-		</channel>
-	</rss>';
-	print $xml;
-	drupal_exit();
-}
-/**
- * creates original example XML API
- */
-function qscreensaver_api_example() {
-	header('Content-Type: text/xml');
-
-  $xml = '<?xml version="1.0" encoding="UTF-8" ?>
-	<rss version="2.0" xml:base="http://www.deviceshowcase.com/" xmlns:atom="http://www.w3.org/2005/Atom">
-		<channel>
-			<title>Qualcomm Screensaver</title>
-			<link>http://screensaver.deviceshowcase.com/</link>
-			<atom:link rel="self" href="http://screensaver.deviceshowcase.com/xml/example" />
-			<pubDate>Wed, 14 Nov 2013 16:43:58 -0600</pubDate>
-			<lastBuildDate>Wed, 15 Nov 2013 12:24:20 -0500</lastBuildDate>
-			<folders count="6">
-				<folder name="landscape_snapdragon" count="6" enabled="true">
-					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/1-Smartphone-First.jpg</source>
-						<filesize>152798</filesize>
-					</item>
-					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/2-Smartphone-IQ.jpg</source>
-						<filesize>339946</filesize>
-					</item>
-					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/3-Snapdragon-All.jpg</source>
-						<filesize>213465</filesize>
-					</item>
-					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/4-Snapdragon-mobile.jpg</source>
-						<filesize>90909</filesize>
-					</item>
-					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/5-Snapdragon-PC.jpg</source>
-						<filesize>123204</filesize>
-					</item>
-					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/6-is-qualcomm.jpg</source>
-						<filesize>124647</filesize>
-					</item>
-				</folder>
-				<folder name="portrait_snapdragon" count="6" enabled="true">
-					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/p/Smartphone-First-time-buyers.jpg</source>
-						<filesize>195519</filesize>
-					</item>
-					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/p/Smartphone-IQ-Smartphone-101.jpg</source>
-						<filesize>489979</filesize>
-					</item>
-					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/p/Snapdragon-All-in-one-integration.jpg</source>
-						<filesize>428850</filesize>
-					</item>
-					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/p/Snapdragon-mobile-all-day.jpg</source>
-						<filesize>69896</filesize>
-					</item>
-					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/p/Snapdragon-PC-in-your-pocket.jpg</source>
-						<filesize>145994</filesize>
-					</item>
-					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/p/who-is-qualcomm.jpg</source>
-						<filesize>165465</filesize>
-					</item>
-				</folder>
-				<folder name="landscape_brandbgs" count="4" enabled="true">
-					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/7-snapdragon-bg.jpg</source>
-						<filesize>157546</filesize>
-					</item>
-					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/8-gobi-bg.jpg</source>
-						<filesize>237492</filesize>
-					</item>
-					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/9-atheros-bg.jpg</source>
-						<filesize>215764</filesize>
-					</item>
-					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/10-qrd-bg.jpg</source>
-						<filesize>134482</filesize>
-					</item>
-				</folder>
-				<folder name="portrait_brandbgs" count="4" enabled="true">
-					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/p/snapdragon-bg.jpg</source>
-						<filesize>308551</filesize>
-					</item>
-					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/p/gobi-bg.jpg</source>
-						<filesize>337737</filesize>
-					</item>
-					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/p/atheros-bg.jpg</source>
-						<filesize>305428</filesize>
-					</item>
-					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/p/qrd-bg.jpg</source>
-						<filesize>290940</filesize>
-					</item>
-				</folder>
-				<folder name="landscape_categorybgs" count="2" enabled="false">
-					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/11-smartphone-bg.jpg</source>
-						<filesize>163116</filesize>
-					</item>
-					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/l/12-computing-bg.jpg</source>
-						<filesize>173810</filesize>
-					</item>
-				</folder>
-				<folder name="portrait_categorybgs" count="2" enabled="false">
-					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/p/smartphone-bg.jpg</source>
-						<filesize>179685</filesize>
-					</item>
-					<item>
-						<source>http://screensaver.deviceshowcase.com/sites/all/modules/custom/qscreensaver_api/images/p/computing-bg.jpg</source>
-						<filesize>246682</filesize>
-					</item>
-				</folder>
 			</folders>
 		</channel>
 	</rss>';

@@ -25,7 +25,7 @@ function qscreensaver_api_xml() {
   if ( $folder === 'all' ) {
     $folder = null;
   }
-  //watchdog( 'xml chk', 'arg0 '. arg(0) .' / arg1 '. arg(1) .' / arg2 '. arg(2) );
+  watchdog( 'qss api', '/'. arg(0) .'/'. arg(1) .'/'. arg(2) .'/'. arg(3) );
 	/*
 	if ( function_exists('watchdog') ) {
 		$dbg = '';

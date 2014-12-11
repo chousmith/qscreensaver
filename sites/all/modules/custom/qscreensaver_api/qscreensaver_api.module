@@ -22,7 +22,7 @@ function qscreensaver_api_menu() {
  */
 function qscreensaver_api_xml() {
   $folder = arg(1);
-  if ( $folder === 'all' ) {
+  if ( ( $folder === 'all' ) || ( $folder === 'example' ) ) {
     $folder = null;
   }
   watchdog( 'qss api', '/'. arg(0) .'/'. arg(1) .'/'. arg(2) .'/'. arg(3) );

@@ -181,7 +181,9 @@ function qscreensaver_api_xml() {
   if ( is_array( $imgstyle ) ) {
     $imgstylename = $imgstyle['name'];
   } else {
+    // imgstyle must be the name, so 
     $imgstylename = $imgstyle;
+    $imgstyle = image_style_load( $imgstylename );
   }
   
 	foreach ( $slides as $s ) {

@@ -41,6 +41,120 @@ function qscreensaver_api_xml() {
     $msg = qscreensaver_api_logmsg();
     watchdog( $msg, '/'. arg(0) .'/'. arg(1) .'/'. arg(2) .'/'. arg(3) );
   }
+  // our 's' img style automatically provides 1920x1080 and 1080x1920 images
+  $imgstyle = 's';
+  // check if dimensions where provided in the URL
+  $d1 = intval( arg(2) );
+  $d2 = intval( arg(3) );
+  if ( ( $d1 > 0 ) && ( $d2 > 0 ) ) {
+    // they could be like /xml/all/1280/720 or /xml/all/720/1280
+    if ( $d2 > $d1 ) {
+      // for simplicity, always make d1 the larger
+      $d3 = $d1;
+      $d1 = $d2;
+      $d2 = $d3;
+    }
+  } else {
+    // otherwise, just provide the 1920x1080
+    $d1 = 1920;
+    $d2 = 1080;
+  }
+  $dim = $d1 .'x'. $d2;
+  //$dlog = $dim;
+  $newstyleID = false;
+  if ( $dim !== '1920x1080' ) {
+    // new img dimensions?! lets check!
+    // https://api.drupal.org/api/drupal/modules%21image%21image.module/function/image_styles/7
+    $imgstyles = image_styles();
+    $newstyleID = 's'. $dim;
+    //$dlog .= ' : '. $newstyleID;
+    // check if our (new) style exists already in image_styles
+    if ( isset( $imgstyles[ $newstyleID ] ) ) {
+      //$dlog .= ' already exists?';
+      //$dlog .= '<br /><pre>'. print_r($imgstyles[$newstyleID],true) .'</pre>';
+      $imgstyle = $imgstyles[ $newstyleID ];
+    } else {
+      //$dlog .= ' not found yet : create on the fly?!';
+      // landscape
+      $lname = 'l'. $dim;
+      $lstyle = image_style_load( $lname );
+      if ( $lstyle === false ) {
+        // create new landscape version ( $d1 > $d2 )
+        $style = image_style_save( array(
+          'name' => $lname,
+          'label' => 'l ('. $dim .')'
+        ));
+        $effect = array(
+          'name' => 'image_scale_and_crop',
+          'data' => array(
+            'width' => $d1,
+            'height' => $d2,
+          ),
+          'isid' => $style['isid'],
+        );
+        image_effect_save($effect);
+        // re-save which flushes caches?!
+        $style = image_style_save( $style );
+        // and reload
+        $lstyle = image_style_load( NULL, $style['isid'] );
+      }
+      // portrait
+      $pname = 'p'. $dim;
+      $pstyle = image_style_load( $pname );
+      if ( $pstyle === false ) {
+        // create new landscape version ( $d1 > $d2 )
+        $style = image_style_save( array(
+          'name' => $pname,
+          'label' => 'p ('. $dim .')'
+        ));
+        $effect = array(
+          'name' => 'image_scale_and_crop',
+          'data' => array(
+            'width' => $d2,
+            'height' => $d1,
+          ),
+          'isid' => $style['isid'],
+        );
+        image_effect_save($effect);
+        // re-save which flushes caches?!
+        $style = image_style_save( $style );
+        // and reload
+        $pstyle = image_style_load( NULL, $style['isid'] );
+      }
+      // the s switches between the l & the p
+      $sname = 's'. $dim;
+      $sstyle = image_style_load( $sname );
+      if ( $sstyle === false ) {
+        // create new landscape version ( $d1 > $d2 )
+        $style = image_style_save( array(
+          'name' => $sname,
+          'label' => 's ('. $dim .')'
+        ));
+        $effect = array(
+          'name' => 'canvasactions_aspect',
+          'data' => array(
+            'portrait' => $pname,
+            'landscape' => $lname,
+            'ratio_adjustment' => 1.77,
+          ),
+          'isid' => $style['isid'],
+        );
+        image_effect_save($effect);
+        // re-save which flushes caches?!
+        $style = image_style_save( $style );
+        // and reload
+        $sstyle = image_style_load( NULL, $style['isid'] );
+      }
+      // and then, fingers crossed??
+      $imgstyle = $sstyle; //$lname; //sname;
+    }
+  }
+  /*
+  // and log that for reference
+  if ( function_exists('watchdog') ) {
+    watchdog( 'qss dim', $dlog );
+  }
+  */
 	header('Content-Type: text/xml');
 
   $xml = '<?xml version="1.0" encoding="UTF-8" ?>
@@ -64,6 +178,12 @@ function qscreensaver_api_xml() {
 		$flag = flag_get_flag('defaultenabled');
 	}
 	
+  if ( is_array( $imgstyle ) ) {
+    $imgstylename = $imgstyle['name'];
+  } else {
+    $imgstylename = $imgstyle;
+  }
+  
 	foreach ( $slides as $s ) {
     $smode = $s->node_type;
     $sgroup = $s->field_field_slide_category[0]['raw']['taxonomy_term']->name;
@@ -99,25 +219,22 @@ function qscreensaver_api_xml() {
 			);
 		}
 		
-		$image = image_style_path( 's', $s->file_managed_file_usage_uri );
+		$image = image_style_path( $imgstylename, $s->file_managed_file_usage_uri );
 		// http://drupal.stackexchange.com/a/76827
 		$image_uri = $s->file_managed_file_usage_uri; // or any public://my_image
-		$style = 's';
-		$src = image_style_path($style, $image_uri);
+		$src = image_style_path($imgstylename, $image_uri);
 		$ok = file_exists($src);
     if ( !$ok ) {
-      $ok = image_style_create_derivative($style, $image_uri, $src);
+      //watchdog('recreate', 'image_uri : '. $image_uri .' : src <pre>'. print_r($src,true) .'</pre><br />imgstyle <pre>'. print_r($imgstyle,true) .'</pre>');
+      $ok = image_style_create_derivative($imgstyle, $image_uri, $src);
     }
 		
 		$new_image_url = file_create_url($src);
 		$image = $new_image_url;
-		/* and then */
+    
+		// and then
 		$image_info = image_get_info( $src );
-    /*
-    $logmsg = 'image '. $image .' : src '. $src;
-    $logmsg .= ' info : <pre>'. print_r($image_info,true) .'</pre>';
-		//watchdog('img chk', $logmsg );
-		*/
+    
 		$folders[$fk]['items'][] = array(
 			'source' => file_create_url( $image ),
 			'filesize' => $image_info['file_size'],
@@ -147,6 +264,7 @@ function qscreensaver_api_xml() {
 		</channel>
 	</rss>';
 	print $xml;
+  // return would give as a normal page, so just bail for straight XML outputs
 	drupal_exit();
 }
 /**
@@ -158,13 +276,16 @@ function qscreensaver_api_dimensions_list() {
   $msgtype = qscreensaver_api_logmsg();
   
   if ( !function_exists('watchdog') ) {
-    $oot = '<h1>You must enable the "Database logging" module in order to track Device dimensions via API</h1>';
+    $oot = '<h1>"Database logging" module required for Device dimensions tracking</h1>';
   } else {
     $oot = '<h1>Device Dimensions as logged by the API</h1>';
     // query "watchdog" for our messages
-    $result = db_query("SELECT message FROM {watchdog} WHERE type = :type", array(
-      ':type' => $msgtype
-    ));
+    $result = db_query(
+      "SELECT message FROM {watchdog} WHERE type = :type",
+      array(
+        ':type' => $msgtype
+      )
+    );
     // init vars to hold aggregated results
     $nonefound = true;
     $dimensions = array();
@@ -258,6 +379,22 @@ function qscreensaver_api_dimensions_list() {
       //$oot .= '<pre>'. print_r($rows,true) .'</pre>';
       $hdr = array( 'Dimensions', 'Count', 'Logs' );
       $oot .= theme( 'table', array( 'header' => $hdr, 'rows' => $rows ) );
+      if ( function_exists('image_styles') ) {
+        // if it doesnt, i think we have a problems..
+        $oot .= '<p><br /></p><h2>Image Styles</h2>';
+        $imgstyles = image_styles();
+        $ihdr = array( 'ID', 'Label', 'Provided by Module' );
+        $irows = array();
+        foreach ( $imgstyles as $n => $s ) {
+          $irows[] = array(
+            $n,
+            $s['label'],
+            $s['module']
+          );
+        }
+        $oot .= theme( 'table', array( 'header' => $ihdr, 'rows' => $irows ) );
+        //$oot .= '<pre>'. print_r( $imgstyles, true ) .'</pre>';
+      }
     }
   }
   return $oot;

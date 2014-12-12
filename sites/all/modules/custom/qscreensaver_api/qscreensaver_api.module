@@ -1,5 +1,5 @@
 <?php
-/*
+/**
  * #todo : move the 2 CONTENT TYPES + 4 IMAGE STYLES + 1 VIEW into this module?
  */
 /**
@@ -12,9 +12,21 @@ function qscreensaver_api_menu() {
 			'page callback' => 'qscreensaver_api_xml',
 			'access arguments' => array('access content'),
 			'type' => MENU_NORMAL_ITEM,
-		)
+		),
+    'admin/content/dimensions' => array(
+      'title' => 'Device Dimensions',
+      'page callback' => 'qscreensaver_api_dimensions_list',
+      'access arguments' => array('administer nodes'),
+      'type' => MENU_NORMAL_ITEM,
+    )
 	);
 	return $items;
+}
+/**
+ * specify our log messages name here in 1 place
+ */
+function qscreensaver_api_logmsg() {
+  return 'qss api';
 }
 /**
  * callback to generate our XML grouping Slides
@@ -25,18 +37,10 @@ function qscreensaver_api_xml() {
   if ( ( $folder === 'all' ) || ( $folder === 'example' ) ) {
     $folder = null;
   }
-  watchdog( 'qss api', '/'. arg(0) .'/'. arg(1) .'/'. arg(2) .'/'. arg(3) );
-	/*
-	if ( function_exists('watchdog') ) {
-		$dbg = '';
-		if ( function_exists( 'apache_response_headers' ) ) {
-			$hdrs = apache_response_headers();
-			$dbg .= 'headers : <pre>'. print_r($hdrs,true) .'</pre><br /><br />';
-		}
-		$dbg .= 'server : <pre>'. print_r($_SERVER,true) .'</pre><br /><br />';
-		watchdog('xml api', $dbg );
-	}
-	*/
+  if ( function_exists('watchdog') ) {
+    $msg = qscreensaver_api_logmsg();
+    watchdog( $msg, '/'. arg(0) .'/'. arg(1) .'/'. arg(2) .'/'. arg(3) );
+  }
 	header('Content-Type: text/xml');
 
   $xml = '<?xml version="1.0" encoding="UTF-8" ?>
@@ -144,4 +148,117 @@ function qscreensaver_api_xml() {
 	</rss>';
 	print $xml;
 	drupal_exit();
+}
+/**
+ * callback query "watchdog" table for our "qss api" log messages
+ * and aggregate the log infos to show a table list of Dimensions
+ */
+function qscreensaver_api_dimensions_list() {
+  $oot = '';
+  $msgtype = qscreensaver_api_logmsg();
+  
+  if ( !function_exists('watchdog') ) {
+    $oot = '<h1>You must enable the "Database logging" module in order to track Device dimensions via API</h1>';
+  } else {
+    $oot = '<h1>Device Dimensions as logged by the API</h1>';
+    // query "watchdog" for our messages
+    $result = db_query("SELECT message FROM {watchdog} WHERE type = :type", array(
+      ':type' => $msgtype
+    ));
+    // init vars to hold aggregated results
+    $nonefound = true;
+    $dimensions = array();
+    $rows = array();
+    
+    if ( $result ) {
+      // loop through our db_query rows
+      while ( $row = $result->fetchAssoc() ) {
+        // got at least 1, so
+        $nonefound = false;
+        // log logs /xml/{folder}/d1/d2 so EXPLODE to find actual dimensions
+        $log = $row['message'];
+        $log = explode( '/', $log );
+        $size = '';
+        $d1 = '';
+        $d2 = '';
+        if ( isset( $log[3] ) ) {
+          $d1 = intval( $log[3] );
+          if ( $d1 === 0 ) {
+            $d1 = '';
+          } else {
+            if ( isset( $log[4] ) ) {
+              $d2 = intval( $log[4] );
+            } else {
+              $d2 = '';
+            }
+          }
+        } else {
+          $d1 = '';
+        }
+        if ( ( $d1 !== '' ) && ( $d2 !== '' ) ) {
+          if ( $d1 > $d2 ) {
+            $size = $d1 .'x'. $d2;
+          } else {
+            $size = $d2 .'x'. $d1;
+          }
+        } else {
+          $size = 'dimensions not found';
+        }
+        // $dimensions stores count & sub array of all URLs (messages)
+        if ( isset( $dimensions[ $size ] ) ) {
+          // if already set, then just inc count(s)
+          $dimensions[ $size ]['count']++;
+          
+          if ( isset ( $dimensions[ $size ]['logs'][ $row['message'] ] ) ) {
+            $dimensions[ $size ]['logs'][ $row['message'] ]++;
+          } else {
+            $dimensions[ $size ]['logs'][ $row['message'] ] = 1;
+          }
+        } else {
+          // this is a new size, so set up that one
+          $dimensions[ $size ] = array(
+            'count' => 1,
+            'logs' => array( $row['message'] => 1 )
+          );
+        }
+      }
+      // now that we have all sizes in the array, sort it
+      ksort( $dimensions );
+      // & loop to better formatted rows for theme('table'...)
+      foreach ( $dimensions as $s => $v ) {
+        // get the 'logs' array
+        $logs = $v['logs'];
+        // sort the 'logs' array
+        ksort( $logs );
+        // flatten the 'logs' array
+        $logd = '';
+        foreach ( $logs as $l => $c ) {
+          $logd .= $l;
+          if ( $c > 1 ) {
+            $logd .= ' ('. $c .' times)';
+          }
+          $logd .= '<br />';
+        }
+        // add parentheses for fun?
+        if ( $s === 'dimensions not found' ) {
+          $s = '('. $s .')';
+        }
+        // and add to our $rows
+        $rows[] = array(
+          $s,
+          $v['count'],
+          $logd
+        );
+      }
+    }
+    if ( $nonefound ) {
+      $oot .= "<p>No \"$msgtype\" watchdog log messages found?</p>";
+    } else {
+      $oot .= "<p>Querying {watchdog} database table for log messages of type \"$msgtype\" :</p>";
+      //$oot .= '<pre>'. print_r($rows,true) .'</pre>';
+      $hdr = array( 'Dimensions', 'Count', 'Logs' );
+      $oot .= theme( 'table', array( 'header' => $hdr, 'rows' => $rows ) );
+    }
+  }
+  return $oot;
 }

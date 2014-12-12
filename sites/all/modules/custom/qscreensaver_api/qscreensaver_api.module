@@ -354,7 +354,7 @@ function qscreensaver_api_dimensions_list() {
         // flatten the 'logs' array
         $logd = '';
         foreach ( $logs as $l => $c ) {
-          $logd .= $l;
+          $logd .= l( $l, $l, array( 'attributes' => array( 'target' => '_blank' ) ) );
           if ( $c > 1 ) {
             $logd .= ' ('. $c .' times)';
           }

@@ -1,0 +1,2 @@
+# Q Screensaver
+Drupal site code base for providing a back end administration system where image files in landscape and portrait orientations can be uploaded and provided via an XML API output, which is consumed by supplemental Android and Windows apps, which display the images as screensavers on their devices.
